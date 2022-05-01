@@ -10,11 +10,47 @@ const TWITTER_HANDLE = "holigon_eth";
 const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
 const OPENSEA_LINK = "";
 const TOTAL_MINT_COUNT = 50;
+
+const CONTRACT_ADDRESS = "0x59Ea8A54AEE0965516A67b7486A577Ce71d2BE09";
+
 const App = () => {
   /*
    * ユーザーのウォレットアドレスを格納するために使用する状態変数を定義します。
    */
   const [currentAccount, setCurrentAccount] = useState("");
+
+  // setupEventListener 関数を定義します。
+// MyEpicNFT.sol の中で event が　emit された時に、
+// 情報を受け取ります。
+const setupEventListener = async () => {
+  try {
+    const { ethereum } = window;
+    if (ethereum) {
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      const signer = provider.getSigner();
+      // NFT が発行されます。
+      const connectedContract = new ethers.Contract(
+        CONTRACT_ADDRESS,
+        myEpicNft.abi,
+        signer
+      );
+      // Event が　emit される際に、コントラクトから送信される情報を受け取っています。
+      connectedContract.on("NewEpicNFTMinted", (from, tokenId) => {
+        console.log(from, tokenId.toNumber());
+        alert(
+          `あなたのウォレットに NFT を送信しました。OpenSea に表示されるまで最大で10分かかることがあります。NFT へのリンクはこちらです: https://testnets.opensea.io/assets/${CONTRACT_ADDRESS}/${tokenId.toNumber()}`
+        );
+      });
+      console.log("Setup event listener!");
+    } else {
+      console.log("Ethereum object doesn't exist!");
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+
   /*この段階でcurrentAccountの中身は空*/
   console.log("currentAccount: ", currentAccount);
   /*
@@ -54,38 +90,6 @@ const App = () => {
   const connectWallet = async () => {
 
 
-    // setupEventListener 関数を定義します。
-// MyEpicNFT.sol の中で event が　emit された時に、
-// 情報を受け取ります。
-const setupEventListener = async () => {
-  try {
-    const { ethereum } = window;
-    if (ethereum) {
-      const provider = new ethers.providers.Web3Provider(ethereum);
-      const signer = provider.getSigner();
-      // NFT が発行されます。
-      const connectedContract = new ethers.Contract(
-        CONTRACT_ADDRESS,
-        myEpicNft.abi,
-        signer
-      );
-      // Event が　emit される際に、コントラクトから送信される情報を受け取っています。
-      connectedContract.on("NewEpicNFTMinted", (from, tokenId) => {
-        console.log(from, tokenId.toNumber());
-        alert(
-          `あなたのウォレットに NFT を送信しました。OpenSea に表示されるまで最大で10分かかることがあります。NFT へのリンクはこちらです: https://testnets.opensea.io/assets/${CONTRACT_ADDRESS}/${tokenId.toNumber()}`
-        );
-      });
-      console.log("Setup event listener!");
-    } else {
-      console.log("Ethereum object doesn't exist!");
-    }
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-
     try {
       const { ethereum } = window;
       if (!ethereum) {
@@ -112,8 +116,6 @@ const setupEventListener = async () => {
   };
 
   const askContractToMintNft = async () => {
-    const CONTRACT_ADDRESS =
-      "0x59Ea8A54AEE0965516A67b7486A577Ce71d2BE09";
     try {
       const { ethereum } = window;
       if (ethereum) {
